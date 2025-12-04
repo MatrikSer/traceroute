@@ -5,4 +5,4 @@ class Router(BaseModel):
     ip: str | None
     num: int
     time: int
-    autonomous_system: int | None
+    autonomous_system: str | None

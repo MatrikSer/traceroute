@@ -1,5 +1,4 @@
 from src.parser import parse_args
-
 from src.traceroute import Traceroute
 
 

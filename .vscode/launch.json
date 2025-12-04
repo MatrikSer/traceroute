@@ -10,8 +10,8 @@
             "request": "launch",
             "program": "src/main.py",
             "console": "integratedTerminal",
-            "args": "1.1.1.1 tcp -n 1000 -t 3 -p 53"
-            // для udp 33434, для tcp и icmp 53
+            "args": "8.8.8.8 tcp -n 1000 -t 3 -p 53 -v"
+            // для udp 33434, для tcp 53
         }
     ]
 }
