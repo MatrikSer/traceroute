@@ -1,7 +1,8 @@
 import argparse
+from argparse import Namespace
 
 
-def parse_args():
+def parse_args() -> Namespace:
     parser = argparse.ArgumentParser()
     parser.add_argument("ip", help="IP address")
     parser.add_argument("protocol", choices=["icmp", "tcp", "udp"], help="Protocol")

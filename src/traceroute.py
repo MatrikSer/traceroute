@@ -2,7 +2,7 @@ import socket
 import time
 
 from pydantic import BaseModel, Field
-from scapy.all import ICMP, IP, TCP, UDP, Raw, send, sr1  # type: ignore
+from scapy.all import ICMP, IP, TCP, UDP, Raw, sr1  # type: ignore[attr-defined]
 
 from src.router import Router
 
@@ -19,7 +19,7 @@ class Traceroute(BaseModel):
     size_of_packet: int
     routers: list[Router] = []
 
-    def _raw_whois_query(self, ip):
+    def _raw_whois_query(self, ip: int) -> str | None:
         try:
             s = socket.socket()
             s.settimeout(self.timeout)
@@ -41,7 +41,7 @@ class Traceroute(BaseModel):
         except socket.timeout:
             return None
 
-    def search_routers(self):
+    def search_routers(self) -> None:
         if self.protocol == "icmp":
             self._icmp_traceroute()
         elif self.protocol == "tcp":
@@ -49,16 +49,17 @@ class Traceroute(BaseModel):
         elif self.protocol == "udp":
             self._udp_traceroute()
 
-    def _view_routers(self):
+    def _view_routers(self) -> None:
         for router in self.routers:
             if self.verbose:
                 print(
-                    f"{router.num} {router.ip if router.ip is not None else '*'} [{router.time},ms] [{router.autonomous_system if router.autonomous_system is not None else '*'}]"
+                    f"{router.num} {router.ip if router.ip is not None else '*'} [{router.time},ms] "
+                    + f"[{router.autonomous_system if router.autonomous_system is not None else '*'}]"
                 )
             else:
                 print(f"{router.num} {router.ip if router.ip is not None else '*'} [{router.time},ms]")
 
-    def _calculate_data_len_for_icmp(self):
+    def _calculate_data_len_for_icmp(self) -> int:
         ip_len = 20
         icmp_len = 8
         data_len = self.size_of_packet - ip_len - icmp_len
@@ -66,7 +67,7 @@ class Traceroute(BaseModel):
             raise ValueError("Packet size is too small")
         return data_len
 
-    def _icmp_traceroute(self):
+    def _icmp_traceroute(self) -> None:
         data_len = self._calculate_data_len_for_icmp()
         for ttl in range(1, self.max_ttl + 1):
             timeout = 0
@@ -94,7 +95,7 @@ class Traceroute(BaseModel):
                 )
                 break
 
-    def _tcp_traceroute(self):
+    def _tcp_traceroute(self) -> None:
         for ttl in range(1, self.max_ttl + 1):
             packet = IP(dst=self.ip, ttl=ttl) / TCP(dport=self.port, flags="S")
             start_time = time.time()
@@ -114,7 +115,7 @@ class Traceroute(BaseModel):
                     Router(ip=response.src, num=ttl, time=int(rrt), autonomous_system=autonomous_system)
                 )
 
-    def _udp_traceroute(self):
+    def _udp_traceroute(self) -> None:
         for ttl in range(1, self.max_ttl + 1):
             packet = IP(dst=self.ip, ttl=ttl) / UDP(dport=self.port + ttl)
             start_time = time.time()
