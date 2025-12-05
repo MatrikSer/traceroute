@@ -5,10 +5,10 @@ from src.traceroute import Traceroute
 def solve():
     args = parse_args()
     traceroute = Traceroute(
-        port=args.p, ip=args.ip, timeout=args.t, protocol=args.protocol, verbose=args.v, number_of_requests=args.n
+        port=args.p, ip=args.ip, timeout=args.t, protocol=args.protocol, verbose=args.v, number_of_requests=args.n, max_ttl=args.mt, interval=args.i, size_of_packet=args.s
     )
     traceroute.search_routers()
-    traceroute.view_routers()
+    traceroute._view_routers()
 
 
 if __name__ == "__main__":
