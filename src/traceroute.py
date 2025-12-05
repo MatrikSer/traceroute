@@ -62,7 +62,7 @@ class Traceroute(BaseModel):
             response = sr1(packet, timeout=self.timeout, verbose=0)
             rrt = (time.time() - start_time) * 1000
             if response is None:
-                self.routers.append(Router(ip=None, num=ttl, time=int(rrt), autonomous_system=autonomous_system))
+                self.routers.append(Router(ip=None, num=ttl, time=int(rrt), autonomous_system=None))
             elif response.type == 11:
                 autonomous_system = self.raw_whois_query(response.src)
                 self.routers.append(
@@ -82,7 +82,7 @@ class Traceroute(BaseModel):
             response = sr1(packet, timeout=self.timeout, verbose=0)
             rrt = (time.time() - start_time) * 1000
             if response is None:
-                self.routers.append(Router(ip=None, num=ttl, time=int(rrt), autonomous_system=autonomous_system))
+                self.routers.append(Router(ip=None, num=ttl, time=int(rrt), autonomous_system=None))
             elif response.haslayer(TCP):
                 autonomous_system = self.raw_whois_query(response.src)
                 self.routers.append(
@@ -102,7 +102,7 @@ class Traceroute(BaseModel):
             response = sr1(packet, timeout=self.timeout, verbose=0)
             rrt = (time.time() - start_time) * 1000
             if response is None:
-                self.routers.append(Router(ip=None, num=ttl, time=int(rrt), autonomous_system=autonomous_system))
+                self.routers.append(Router(ip=None, num=ttl, time=int(rrt), autonomous_system=None))
             elif response.type == 11:
                 autonomous_system = self.raw_whois_query(response.src)
                 self.routers.append(
