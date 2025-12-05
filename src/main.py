@@ -2,7 +2,8 @@ from src.parser import parse_args
 from src.traceroute import Traceroute
 
 
-def solve() -> None:
+def main() -> None:
+    """Main function for starting the program"""
     args = parse_args()
     traceroute = Traceroute(
         port=args.p,
@@ -17,7 +18,3 @@ def solve() -> None:
     )
     traceroute.search_routers()
     traceroute._view_routers()
-
-
-if __name__ == "__main__":
-    solve()

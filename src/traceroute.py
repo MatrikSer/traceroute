@@ -8,6 +8,8 @@ from src.router import Router
 
 
 class Traceroute(BaseModel):
+    """Class for searching routers"""
+
     port: int = Field(ge=0, lt=65535)
     ip: str
     timeout: int = Field(ge=0)
@@ -20,6 +22,7 @@ class Traceroute(BaseModel):
     routers: list[Router] = []
 
     def _raw_whois_query(self, ip: int) -> str | None:
+        """Sends a query to whois.radb.net and returns the autonomous system"""
         try:
             s = socket.socket()
             s.settimeout(self.timeout)
@@ -42,6 +45,7 @@ class Traceroute(BaseModel):
             return None
 
     def search_routers(self) -> None:
+        """Search routers for the specified protocol"""
         if self.protocol == "icmp":
             self._icmp_traceroute()
         elif self.protocol == "tcp":
@@ -50,6 +54,7 @@ class Traceroute(BaseModel):
             self._udp_traceroute()
 
     def _view_routers(self) -> None:
+        """Prints the results of the search"""
         for router in self.routers:
             if self.verbose:
                 print(
@@ -60,6 +65,7 @@ class Traceroute(BaseModel):
                 print(f"{router.num} {router.ip if router.ip is not None else '*'} [{router.time},ms]")
 
     def _calculate_data_len_for_icmp(self) -> int:
+        """Calculates the length of the data for ICMP packets"""
         ip_len = 20
         icmp_len = 8
         data_len = self.size_of_packet - ip_len - icmp_len
@@ -68,6 +74,7 @@ class Traceroute(BaseModel):
         return data_len
 
     def _icmp_traceroute(self) -> None:
+        """Traceroute for ICMP protocol"""
         data_len = self._calculate_data_len_for_icmp()
         for ttl in range(1, self.max_ttl + 1):
             timeout = 0
@@ -96,6 +103,7 @@ class Traceroute(BaseModel):
                 break
 
     def _tcp_traceroute(self) -> None:
+        """Traceroute for TCP protocol"""
         for ttl in range(1, self.max_ttl + 1):
             packet = IP(dst=self.ip, ttl=ttl) / TCP(dport=self.port, flags="S")
             start_time = time.time()
@@ -116,6 +124,7 @@ class Traceroute(BaseModel):
                 )
 
     def _udp_traceroute(self) -> None:
+        """Traceroute for UDP protocol"""
         for ttl in range(1, self.max_ttl + 1):
             packet = IP(dst=self.ip, ttl=ttl) / UDP(dport=self.port + ttl)
             start_time = time.time()

@@ -3,6 +3,7 @@ from argparse import Namespace
 
 
 def parse_args() -> Namespace:
+    """Parses the command line arguments"""
     parser = argparse.ArgumentParser()
     parser.add_argument("ip", help="IP address")
     parser.add_argument("protocol", choices=["icmp", "tcp", "udp"], help="Protocol")
