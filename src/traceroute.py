@@ -58,11 +58,11 @@ class Traceroute(BaseModel):
         for router in self.routers:
             if self.verbose:
                 print(
-                    f"{router.num} {router.ip if router.ip is not None else '*'} [{router.time},ms] "
-                    + f"[{router.autonomous_system if router.autonomous_system is not None else '*'}]"
+                    f"{router.num} {router.ip if router.ip is not None else '*'} [{router.time if router.ip is not None else '*'},ms]"
+                    + f" [{router.autonomous_system if router.autonomous_system is not None else '*'}]"
                 )
             else:
-                print(f"{router.num} {router.ip if router.ip is not None else '*'} [{router.time},ms]")
+                print(f"{router.num} {router.ip if router.ip is not None else '*'} [{router.time if router.ip is not None else '*'},ms]")
 
     def _calculate_data_len_for_icmp(self) -> int:
         """Calculates the length of the data for ICMP packets"""
@@ -102,13 +102,30 @@ class Traceroute(BaseModel):
                 )
                 break
 
+    def _calculate_data_len_for_tcp(self) -> int:
+            """Calculates the length of the data for TCP packets"""
+            ip_len = 20
+            tcp_headers_len = 20
+            data_len = self.size_of_packet - ip_len - tcp_headers_len
+            if data_len < 0:
+                raise ValueError("Packet size is too small")
+            return data_len
+
     def _tcp_traceroute(self) -> None:
         """Traceroute for TCP protocol"""
+        data_len = self._calculate_data_len_for_tcp()
         for ttl in range(1, self.max_ttl + 1):
-            packet = IP(dst=self.ip, ttl=ttl) / TCP(dport=self.port, flags="S")
-            start_time = time.time()
-            response = sr1(packet, timeout=self.timeout, verbose=0)
-            rrt = (time.time() - start_time) * 1000
+            timeout = 0
+            for _ in range(self.number_of_requests):
+                packet = IP(dst=self.ip, ttl=ttl) / TCP(dport=self.port, flags="S") / Raw(load=data_len * b"X")
+                start_time = time.time()
+                response = sr1(packet, timeout=self.timeout, verbose=0)
+                if response is not None:
+                    timeout = 0
+                    break
+                time.sleep(self.interval)
+                timeout = self.interval
+            rrt = (time.time() - start_time - timeout) * 1000
             if response is None:
                 self.routers.append(Router(ip=None, num=ttl, time=int(rrt), autonomous_system=None))
             elif response.haslayer(TCP):
