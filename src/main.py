@@ -1,13 +1,12 @@
 from src.parser import parse_args
 from src.traceroute import Traceroute
 
-
 def main() -> None:
     """Main function for starting the program"""
     args = parse_args()
     traceroute = Traceroute(
         port=args.p,
-        ip=Traceroute.analyze_address(args.address),
+        address=args.address,
         timeout=args.t,
         protocol=args.protocol,
         verbose=args.v,
@@ -16,6 +15,7 @@ def main() -> None:
         interval=args.i,
         size_of_packet=args.s,
     )
+    traceroute.analyze_address()
     traceroute.search_routers()
     traceroute._view_routers()
 

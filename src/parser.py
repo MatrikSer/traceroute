@@ -6,7 +6,7 @@ def parse_args() -> Namespace:
     """Parses the command line arguments"""
     parser = argparse.ArgumentParser()
     parser.add_argument("address", help="Address, IP or domain")
-    parser.add_argument("protocol", choices=["icmp", "tcp", "udp"], help="Protocol")
+    parser.add_argument("protocol", choices=["icmp", "tcp"], help="Protocol")
     parser.add_argument("-t", type=int, default=2, help="Timeout")
     parser.add_argument("-n", type=int, default=3, help="Number of requests")
     parser.add_argument("-mt", type=int, default=30, help="Max TTL")
