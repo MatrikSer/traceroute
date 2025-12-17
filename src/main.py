@@ -7,7 +7,7 @@ def main() -> None:
     args = parse_args()
     traceroute = Traceroute(
         port=args.p,
-        ip=args.ip,
+        ip=Traceroute.parse_address(args.address),
         timeout=args.t,
         protocol=args.protocol,
         verbose=args.v,
@@ -18,3 +18,7 @@ def main() -> None:
     )
     traceroute.search_routers()
     traceroute._view_routers()
+
+
+if __name__ == "__main__":
+    main()

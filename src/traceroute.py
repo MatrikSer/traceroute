@@ -21,6 +21,16 @@ class Traceroute(BaseModel):
     size_of_packet: int
     routers: list[Router] = []
 
+    @staticmethod
+    def parse_address(address: str) -> str:
+        """Parses the address"""
+        parts = address.split(".")
+        for part in parts:
+            if not part.isdigit():
+                return socket.gethostbyname(address)
+        return address
+        
+
     def _raw_whois_query(self, ip: int) -> str | None:
         """Sends a query to whois.radb.net and returns the autonomous system"""
         try:
