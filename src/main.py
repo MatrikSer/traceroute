@@ -7,7 +7,7 @@ def main() -> None:
     args = parse_args()
     traceroute = Traceroute(
         port=args.p,
-        ip=Traceroute.parse_address(args.address),
+        ip=Traceroute.analyze_address(args.address),
         timeout=args.t,
         protocol=args.protocol,
         verbose=args.v,

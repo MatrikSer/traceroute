@@ -1,5 +1,6 @@
 import socket
 import time
+import ipaddress
 
 from pydantic import BaseModel, Field
 from scapy.all import ICMP, IP, TCP, UDP, Raw, sr1  # type: ignore[attr-defined]
@@ -20,18 +21,24 @@ class Traceroute(BaseModel):
     interval: int = Field(ge=0)
     size_of_packet: int
     routers: list[Router] = []
+    ipv6: bool = False
+    ipv4: bool = True
 
-    @staticmethod
-    def parse_address(address: str) -> str:
-        """Parses the address"""
-        parts = address.split(".")
-        for part in parts:
-            if not part.isdigit():
-                return socket.gethostbyname(address)
-        return address
+
+    def analyze_address(self, address: str) -> str:
+        """Analyzes the address"""
+        ip = ipaddress.ip_address(address)
+        if isinstance(ip, ipaddress.IPv4Address):
+            return address
+        elif isinstance(ip, ipaddress.IPv6Address):
+            self.ipv6 = True
+            self.ipv4 = False
+            return address
+        else:
+            return socket.gethostbyname(address)
         
 
-    def _raw_whois_query(self, ip: int) -> str | None:
+    def _raw_whois_query(self, ip: str) -> str | None:
         """Sends a query to whois.radb.net and returns the autonomous system"""
         try:
             s = socket.socket()
@@ -60,8 +67,6 @@ class Traceroute(BaseModel):
             self._icmp_traceroute()
         elif self.protocol == "tcp":
             self._tcp_traceroute()
-        elif self.protocol == "udp":
-            self._udp_traceroute()
 
     def _view_routers(self) -> None:
         """Prints the results of the search"""
@@ -76,11 +81,11 @@ class Traceroute(BaseModel):
 
     def _calculate_data_len_for_icmp(self) -> int:
         """Calculates the length of the data for ICMP packets"""
-        ip_len = 20
+        ip_len = 20 if self.ipv4 else 40
         icmp_len = 8
         data_len = self.size_of_packet - ip_len - icmp_len
         if data_len < 0:
-            raise ValueError("Packet size is too small")
+            raise ValueError("Packet size is too small for ICMP")
         return data_len
 
     def _icmp_traceroute(self) -> None:
@@ -114,11 +119,11 @@ class Traceroute(BaseModel):
 
     def _calculate_data_len_for_tcp(self) -> int:
             """Calculates the length of the data for TCP packets"""
-            ip_len = 20
+            ip_len = 20 if self.ipv4 else 40
             tcp_headers_len = 20
             data_len = self.size_of_packet - ip_len - tcp_headers_len
             if data_len < 0:
-                raise ValueError("Packet size is too small")
+                raise ValueError("Packet size is too small for TCP")
             return data_len
 
     def _tcp_traceroute(self) -> None:
@@ -149,24 +154,3 @@ class Traceroute(BaseModel):
                 self.routers.append(
                     Router(ip=response.src, num=ttl, time=int(rrt), autonomous_system=autonomous_system)
                 )
-
-    def _udp_traceroute(self) -> None:
-        """Traceroute for UDP protocol"""
-        for ttl in range(1, self.max_ttl + 1):
-            packet = IP(dst=self.ip, ttl=ttl) / UDP(dport=self.port + ttl)
-            start_time = time.time()
-            response = sr1(packet, timeout=self.timeout, verbose=0)
-            rrt = (time.time() - start_time) * 1000
-            if response is None:
-                self.routers.append(Router(ip=None, num=ttl, time=int(rrt), autonomous_system=None))
-            elif response.type == 11:
-                autonomous_system = self._raw_whois_query(response.src)
-                self.routers.append(
-                    Router(ip=response.src, num=ttl, time=int(rrt), autonomous_system=autonomous_system)
-                )
-            elif response.type == 3 and response.code == 3:
-                autonomous_system = self._raw_whois_query(response.src)
-                self.routers.append(
-                    Router(ip=response.src, num=ttl, time=int(rrt), autonomous_system=autonomous_system)
-                )
-                break
