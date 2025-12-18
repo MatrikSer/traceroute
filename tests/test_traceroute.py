@@ -1,5 +1,4 @@
 import pytest
-from unittest.mock import MagicMock, patch
 
 from src.router import Router
 from src.traceroute import Traceroute
@@ -148,7 +147,7 @@ class TestTracerouteViewRouters:
             max_ttl=30,
             interval=0,
             size_of_packet=40,
-            routers=[sample_router]
+            routers=[sample_router],
         )
 
         traceroute.view_routers()
@@ -166,7 +165,7 @@ class TestTracerouteViewRouters:
             max_ttl=30,
             interval=0,
             size_of_packet=40,
-            routers=[router_no_ip]
+            routers=[router_no_ip],
         )
 
         traceroute.view_routers()
@@ -191,7 +190,7 @@ class TestTracerouteViewRouters:
             max_ttl=30,
             interval=0,
             size_of_packet=40,
-            routers=routers
+            routers=routers,
         )
 
         traceroute.view_routers()

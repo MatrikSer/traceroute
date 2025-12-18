@@ -1,5 +1,6 @@
-import pytest
 from unittest.mock import patch
+
+import pytest
 
 from src.parser import parse_args
 
@@ -21,16 +22,9 @@ class TestParseArgs:
 
     def test_parse_args_all_arguments(self):
         """Test parsing with all arguments provided"""
-        with patch('sys.argv', [
-            'traceroute',
-            '10.0.0.1',
-            '-t', '5',
-            '-n', '2',
-            '-mt', '25',
-            '-i', '1',
-            '-s', '60',
-            '-p', '80'
-        ]):
+        with patch(
+            'sys.argv', ['traceroute', '10.0.0.1', '-t', '5', '-n', '2', '-mt', '25', '-i', '1', '-s', '60', '-p', '80']
+        ):
             args = parse_args()
             assert args.ip == '10.0.0.1'
             assert args.t == 5
@@ -42,12 +36,7 @@ class TestParseArgs:
 
     def test_parse_args_partial_arguments(self):
         """Test parsing with some arguments provided"""
-        with patch('sys.argv', [
-            'traceroute',
-            '8.8.8.8',
-            '-t', '3',
-            '-s', '50'
-        ]):
+        with patch('sys.argv', ['traceroute', '8.8.8.8', '-t', '3', '-s', '50']):
             args = parse_args()
             assert args.ip == '8.8.8.8'
             assert args.t == 3
@@ -63,13 +52,16 @@ class TestParseArgs:
             with pytest.raises(SystemExit):  # argparse exits on missing required arg
                 parse_args()
 
-    @pytest.mark.parametrize("invalid_value,flag", [
-        ("not_int", "-t"),
-        ("abc", "-mt"),
-        ("xyz", "-i"),
-        ("invalid", "-s"),
-        ("not_port", "-p"),
-    ])
+    @pytest.mark.parametrize(
+        "invalid_value,flag",
+        [
+            ("not_int", "-t"),
+            ("abc", "-mt"),
+            ("xyz", "-i"),
+            ("invalid", "-s"),
+            ("not_port", "-p"),
+        ],
+    )
     def test_parse_args_invalid_values(self, invalid_value, flag):
         """Test parsing with invalid argument values"""
         with patch('sys.argv', ['traceroute', '192.168.1.1', flag, invalid_value]):

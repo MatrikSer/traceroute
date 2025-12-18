@@ -1,5 +1,6 @@
-import pytest
 from unittest.mock import patch
+
+import pytest
 
 from src.main import main
 
@@ -12,15 +13,7 @@ class TestMain:
     def test_main_successful_execution(self, mock_parse_args, mock_traceroute_class):
         """Test main function with successful execution"""
         # Mock the parsed arguments
-        mock_args = type('MockArgs', (), {
-            'p': 53,
-            'ip': '8.8.8.8',
-            't': 2,
-            'n': 3,
-            'mt': 30,
-            'i': 0,
-            's': 40
-        })()
+        mock_args = type('MockArgs', (), {'p': 53, 'ip': '8.8.8.8', 't': 2, 'n': 3, 'mt': 30, 'i': 0, 's': 40})()
         mock_parse_args.return_value = mock_args
 
         # Mock the traceroute instance
@@ -34,13 +27,7 @@ class TestMain:
 
         # Verify Traceroute was created with correct arguments
         mock_traceroute_class.assert_called_once_with(
-            port=53,
-            ip='8.8.8.8',
-            timeout=2,
-            number_of_requests=3,
-            max_ttl=30,
-            interval=0,
-            size_of_packet=40
+            port=53, ip='8.8.8.8', timeout=2, number_of_requests=3, max_ttl=30, interval=0, size_of_packet=40
         )
 
         # Verify methods were called
@@ -53,15 +40,7 @@ class TestMain:
     def test_main_with_custom_arguments(self, mock_parse_args, mock_traceroute_class):
         """Test main function with custom command line arguments"""
         # Mock custom arguments
-        mock_args = type('MockArgs', (), {
-            'p': 80,
-            'ip': '192.168.1.1',
-            't': 5,
-            'n': 2,
-            'mt': 25,
-            'i': 1,
-            's': 60
-        })()
+        mock_args = type('MockArgs', (), {'p': 80, 'ip': '192.168.1.1', 't': 5, 'n': 2, 'mt': 25, 'i': 1, 's': 60})()
         mock_parse_args.return_value = mock_args
 
         mock_traceroute_instance = mock_traceroute_class.return_value
@@ -70,13 +49,7 @@ class TestMain:
 
         # Verify Traceroute was created with custom arguments
         mock_traceroute_class.assert_called_once_with(
-            port=80,
-            ip='192.168.1.1',
-            timeout=5,
-            number_of_requests=2,
-            max_ttl=25,
-            interval=1,
-            size_of_packet=60
+            port=80, ip='192.168.1.1', timeout=5, number_of_requests=2, max_ttl=25, interval=1, size_of_packet=60
         )
 
         # Verify execution flow
@@ -88,15 +61,7 @@ class TestMain:
     @patch('src.main.parse_args')
     def test_main_analyze_ip_failure(self, mock_parse_args, mock_traceroute_class):
         """Test main function when analyze_ip raises an exception"""
-        mock_args = type('MockArgs', (), {
-            'p': 53,
-            'ip': 'invalid.ip',
-            't': 2,
-            'n': 3,
-            'mt': 30,
-            'i': 0,
-            's': 40
-        })()
+        mock_args = type('MockArgs', (), {'p': 53, 'ip': 'invalid.ip', 't': 2, 'n': 3, 'mt': 30, 'i': 0, 's': 40})()
         mock_parse_args.return_value = mock_args
 
         mock_traceroute_instance = mock_traceroute_class.return_value
@@ -115,15 +80,7 @@ class TestMain:
     @patch('src.main.parse_args')
     def test_main_run_failure(self, mock_parse_args, mock_traceroute_class):
         """Test main function when run method raises an exception"""
-        mock_args = type('MockArgs', (), {
-            'p': 53,
-            'ip': '8.8.8.8',
-            't': 2,
-            'n': 3,
-            'mt': 30,
-            'i': 0,
-            's': 40
-        })()
+        mock_args = type('MockArgs', (), {'p': 53, 'ip': '8.8.8.8', 't': 2, 'n': 3, 'mt': 30, 'i': 0, 's': 40})()
         mock_parse_args.return_value = mock_args
 
         mock_traceroute_instance = mock_traceroute_class.return_value
