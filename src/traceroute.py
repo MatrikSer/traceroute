@@ -58,11 +58,15 @@ class Traceroute(BaseModel):
         for router in self.routers:
             if self.verbose:
                 print(
-                    f"{router.num} {router.ip if router.ip is not None else '*'} [{router.time if router.ip is not None else '*'},ms]"
+                    f"{router.num} {router.ip if router.ip is not None else '*'}"
+                    + f" [{router.time if router.ip is not None else '*'},ms]"
                     + f" [{router.autonomous_system if router.autonomous_system is not None else '*'}]"
                 )
             else:
-                print(f"{router.num} {router.ip if router.ip is not None else '*'} [{router.time if router.ip is not None else '*'},ms]")
+                print(
+                    f"{router.num} {router.ip if router.ip is not None else '*'}"
+                    + f" [{router.time if router.ip is not None else '*'},ms]"
+                )
 
     def _calculate_data_len_for_icmp(self) -> int:
         """Calculates the length of the data for ICMP packets"""
@@ -103,13 +107,13 @@ class Traceroute(BaseModel):
                 break
 
     def _calculate_data_len_for_tcp(self) -> int:
-            """Calculates the length of the data for TCP packets"""
-            ip_len = 20
-            tcp_headers_len = 20
-            data_len = self.size_of_packet - ip_len - tcp_headers_len
-            if data_len < 0:
-                raise ValueError("Packet size is too small")
-            return data_len
+        """Calculates the length of the data for TCP packets"""
+        ip_len = 20
+        tcp_headers_len = 20
+        data_len = self.size_of_packet - ip_len - tcp_headers_len
+        if data_len < 0:
+            raise ValueError("Packet size is too small")
+        return data_len
 
     def _tcp_traceroute(self) -> None:
         """Traceroute for TCP protocol"""
