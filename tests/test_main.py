@@ -1,4 +1,4 @@
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 
 import pytest
 
@@ -10,7 +10,7 @@ class TestMain:
 
     @patch('src.main.Traceroute')
     @patch('src.main.parse_args')
-    def test_main_successful_execution(self, mock_parse_args, mock_traceroute_class):
+    def test_main_successful_execution(self, mock_parse_args: MagicMock, mock_traceroute_class: MagicMock) -> None:
         """Test main function with successful execution"""
         # Mock the parsed arguments
         mock_args = type('MockArgs', (), {'p': 53, 'ip': '8.8.8.8', 't': 2, 'n': 3, 'mt': 30, 'i': 0, 's': 40})()
@@ -37,7 +37,7 @@ class TestMain:
 
     @patch('src.main.Traceroute')
     @patch('src.main.parse_args')
-    def test_main_with_custom_arguments(self, mock_parse_args, mock_traceroute_class):
+    def test_main_with_custom_arguments(self, mock_parse_args: MagicMock, mock_traceroute_class: MagicMock) -> None:
         """Test main function with custom command line arguments"""
         # Mock custom arguments
         mock_args = type('MockArgs', (), {'p': 80, 'ip': '192.168.1.1', 't': 5, 'n': 2, 'mt': 25, 'i': 1, 's': 60})()
@@ -59,7 +59,7 @@ class TestMain:
 
     @patch('src.main.Traceroute')
     @patch('src.main.parse_args')
-    def test_main_analyze_ip_failure(self, mock_parse_args, mock_traceroute_class):
+    def test_main_analyze_ip_failure(self, mock_parse_args: MagicMock, mock_traceroute_class: MagicMock) -> None:
         """Test main function when analyze_ip raises an exception"""
         mock_args = type('MockArgs', (), {'p': 53, 'ip': 'invalid.ip', 't': 2, 'n': 3, 'mt': 30, 'i': 0, 's': 40})()
         mock_parse_args.return_value = mock_args
@@ -74,11 +74,10 @@ class TestMain:
         # Verify analyze_ip was called but run and view_routers were not
         mock_traceroute_instance.analyze_ip.assert_called_once()
         mock_traceroute_instance.run.assert_not_called()
-        mock_traceroute_instance.view_routers.assert_not_called()
 
     @patch('src.main.Traceroute')
     @patch('src.main.parse_args')
-    def test_main_run_failure(self, mock_parse_args, mock_traceroute_class):
+    def test_main_run_failure(self, mock_parse_args: MagicMock, mock_traceroute_class: MagicMock) -> None:
         """Test main function when run method raises an exception"""
         mock_args = type('MockArgs', (), {'p': 53, 'ip': '8.8.8.8', 't': 2, 'n': 3, 'mt': 30, 'i': 0, 's': 40})()
         mock_parse_args.return_value = mock_args

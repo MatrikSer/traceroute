@@ -1,4 +1,5 @@
 import pytest
+from _pytest.capture import CaptureFixture
 
 from src.router import Router
 from src.traceroute import Traceroute
@@ -7,7 +8,7 @@ from src.traceroute import Traceroute
 class TestTracerouteInit:
     """Tests for Traceroute initialization and validation"""
 
-    def test_traceroute_creation_valid(self, valid_traceroute):
+    def test_traceroute_creation_valid(self, valid_traceroute: Traceroute) -> None:
         """Test creating traceroute with valid parameters"""
         assert valid_traceroute.port == 53
         assert valid_traceroute.ip == "8.8.8.8"
@@ -19,7 +20,7 @@ class TestTracerouteInit:
         assert valid_traceroute.size_of_packet == 40
         assert valid_traceroute.routers == []
 
-    def test_traceroute_creation_invalid_port(self):
+    def test_traceroute_creation_invalid_port(self) -> None:
         """Test traceroute creation with invalid port"""
         with pytest.raises(ValueError):
             Traceroute(
@@ -32,7 +33,7 @@ class TestTracerouteInit:
                 size_of_packet=40,
             )
 
-    def test_traceroute_creation_invalid_timeout(self):
+    def test_traceroute_creation_invalid_timeout(self) -> None:
         """Test traceroute creation with negative timeout"""
         with pytest.raises(ValueError):
             Traceroute(
@@ -49,11 +50,11 @@ class TestTracerouteInit:
 class TestTracerouteAnalyzeIp:
     """Tests for analyze_ip method"""
 
-    def test_analyze_ip_valid_ipv4(self, valid_traceroute):
+    def test_analyze_ip_valid_ipv4(self, valid_traceroute: Traceroute) -> None:
         """Test analyzing valid IPv4 address"""
         valid_traceroute.analyze_ip()  # Should not raise
 
-    def test_analyze_ip_invalid_ip(self):
+    def test_analyze_ip_invalid_ip(self) -> None:
         """Test analyzing invalid IP address"""
         traceroute = Traceroute(
             port=53,
@@ -67,7 +68,7 @@ class TestTracerouteAnalyzeIp:
         with pytest.raises(ValueError, match="Invalid IP address"):
             traceroute.analyze_ip()
 
-    def test_analyze_ip_ipv6(self):
+    def test_analyze_ip_ipv6(self) -> None:
         """Test analyzing IPv6 address (should fail as code expects IPv4)"""
         traceroute = Traceroute(
             port=53,
@@ -85,13 +86,13 @@ class TestTracerouteAnalyzeIp:
 class TestTracerouteCalculateDataLen:
     """Tests for _calculate_data_len_for_icmp method"""
 
-    def test_calculate_data_len_normal(self, valid_traceroute):
+    def test_calculate_data_len_normal(self, valid_traceroute: Traceroute) -> None:
         """Test calculating data length with normal packet size"""
         result = valid_traceroute._calculate_data_len_for_icmp()
         # IP header (20) + ICMP header (8) = 28, so data_len = 40 - 28 = 12
         assert result == 12
 
-    def test_calculate_data_len_large_packet(self):
+    def test_calculate_data_len_large_packet(self) -> None:
         """Test calculating data length with large packet"""
         traceroute = Traceroute(
             port=53,
@@ -105,7 +106,7 @@ class TestTracerouteCalculateDataLen:
         result = traceroute._calculate_data_len_for_icmp()
         assert result == 72  # 100 - 20 - 8 = 72
 
-    def test_calculate_data_len_too_small(self):
+    def test_calculate_data_len_too_small(self) -> None:
         """Test calculating data length with packet too small"""
         traceroute = Traceroute(
             port=53,
@@ -119,7 +120,7 @@ class TestTracerouteCalculateDataLen:
         with pytest.raises(ValueError, match="Packet size is too small"):
             traceroute._calculate_data_len_for_icmp()
 
-    def test_calculate_data_len_minimum_valid(self):
+    def test_calculate_data_len_minimum_valid(self) -> None:
         """Test calculating data length with minimum valid packet size"""
         traceroute = Traceroute(
             port=53,
@@ -137,7 +138,7 @@ class TestTracerouteCalculateDataLen:
 class TestTracerouteViewRouters:
     """Tests for view_routers method"""
 
-    def test_view_routers_with_ip(self, capsys, sample_router):
+    def test_view_routers_with_ip(self, capsys: CaptureFixture[str], sample_router: Router) -> None:
         """Test viewing routers with IP addresses"""
         traceroute = Traceroute(
             port=53,
@@ -155,7 +156,7 @@ class TestTracerouteViewRouters:
         captured = capsys.readouterr()
         assert "1 192.168.1.1    15,ms" in captured.out
 
-    def test_view_routers_without_ip(self, capsys, router_no_ip):
+    def test_view_routers_without_ip(self, capsys: CaptureFixture[str], router_no_ip: Router) -> None:
         """Test viewing routers without IP addresses"""
         traceroute = Traceroute(
             port=53,
@@ -174,7 +175,7 @@ class TestTracerouteViewRouters:
         # When IP is None, both IP and time show as *
         assert "2 *    *,ms" in captured.out
 
-    def test_view_routers_multiple(self, capsys):
+    def test_view_routers_multiple(self, capsys: CaptureFixture[str]) -> None:
         """Test viewing multiple routers"""
         routers = [
             Router(ip="192.168.1.1", num=1, time=10),

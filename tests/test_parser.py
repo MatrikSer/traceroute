@@ -8,7 +8,7 @@ from src.parser import parse_args
 class TestParseArgs:
     """Tests for argument parsing"""
 
-    def test_parse_args_default_values(self):
+    def test_parse_args_default_values(self) -> None:
         """Test parsing with minimal arguments"""
         with patch('sys.argv', ['traceroute', '192.168.1.1']):
             args = parse_args()
@@ -20,7 +20,7 @@ class TestParseArgs:
             assert args.s == 40  # default packet size
             assert args.p == 53  # default port
 
-    def test_parse_args_all_arguments(self):
+    def test_parse_args_all_arguments(self) -> None:
         """Test parsing with all arguments provided"""
         with patch(
             'sys.argv', ['traceroute', '10.0.0.1', '-t', '5', '-n', '2', '-mt', '25', '-i', '1', '-s', '60', '-p', '80']
@@ -34,7 +34,7 @@ class TestParseArgs:
             assert args.s == 60
             assert args.p == 80
 
-    def test_parse_args_partial_arguments(self):
+    def test_parse_args_partial_arguments(self) -> None:
         """Test parsing with some arguments provided"""
         with patch('sys.argv', ['traceroute', '8.8.8.8', '-t', '3', '-s', '50']):
             args = parse_args()
@@ -46,7 +46,7 @@ class TestParseArgs:
             assert args.i == 0  # default
             assert args.p == 53  # default
 
-    def test_parse_args_missing_ip(self):
+    def test_parse_args_missing_ip(self) -> None:
         """Test parsing without IP address argument"""
         with patch('sys.argv', ['traceroute']):
             with pytest.raises(SystemExit):  # argparse exits on missing required arg
@@ -62,7 +62,7 @@ class TestParseArgs:
             ("not_port", "-p"),
         ],
     )
-    def test_parse_args_invalid_values(self, invalid_value, flag):
+    def test_parse_args_invalid_values(self, invalid_value: str, flag: str) -> None:
         """Test parsing with invalid argument values"""
         with patch('sys.argv', ['traceroute', '192.168.1.1', flag, invalid_value]):
             with pytest.raises(SystemExit):  # argparse exits on invalid int values

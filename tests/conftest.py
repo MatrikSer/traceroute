@@ -5,19 +5,19 @@ from src.traceroute import Traceroute
 
 
 @pytest.fixture
-def sample_router():
+def sample_router() -> Router:
     """Fixture for a sample router"""
     return Router(ip="192.168.1.1", num=1, time=15)
 
 
 @pytest.fixture
-def router_no_ip():
+def router_no_ip() -> Router:
     """Fixture for a router with no IP"""
     return Router(ip=None, num=2, time=25)
 
 
 @pytest.fixture
-def valid_traceroute():
+def valid_traceroute() -> Traceroute:
     """Fixture for a valid traceroute instance"""
     return Traceroute(
         port=53,
@@ -32,7 +32,7 @@ def valid_traceroute():
 
 
 @pytest.fixture
-def traceroute_minimal():
+def traceroute_minimal() -> Traceroute:
     """Fixture for minimal traceroute configuration"""
     return Traceroute(
         port=53,
