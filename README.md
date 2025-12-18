@@ -72,7 +72,7 @@ traceroute <адрес> <протокол> [опции]
 #### Простая ICMP трассировка
 
 ```bash
-traceroute 8.8.8.8 icmp
+traceroute 1.1.1.1 icmp
 ```
 
 #### TCP трассировка с кастомным портом

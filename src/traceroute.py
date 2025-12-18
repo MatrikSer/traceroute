@@ -53,7 +53,7 @@ class Traceroute(BaseModel):
         """Prints the results of the search"""
         for router in self.routers:
             print(
-                f"{router.num} {router.ip if router.ip is not None else '*'} [{router.time if router.ip is not None else '*'},ms]"
+                f"{router.num} {router.ip if router.ip is not None else '*'}    {router.time if router.ip is not None else '*'},ms"
             )
 
     def search_routers(self) -> None:
