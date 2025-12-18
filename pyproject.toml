@@ -1,7 +1,7 @@
 [tool.poetry]
 name = "traceroute"
 version = "0.0.1"
-description = "Simple traceroute utility for command line, written in Python. Allows tracing network paths using ICMP, TCP, UDP protocols."
+description = "Simple traceroute utility for command line, written in Python. Allows tracing network paths using ICMP protocol."
 authors = [
     "Матвей"
 ]
