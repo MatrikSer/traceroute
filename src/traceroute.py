@@ -1,8 +1,9 @@
-import socket
+import ipaddress
 import time
+from ipaddress import IPv4Address
 
 from pydantic import BaseModel, Field
-from scapy.all import ICMP, IP, TCP, UDP, Raw, sr1  # type: ignore[attr-defined]
+from scapy.all import ICMP, IP, Raw, sr1  # type: ignore[attr-defined]
 
 from src.router import Router
 
@@ -13,60 +14,29 @@ class Traceroute(BaseModel):
     port: int = Field(ge=0, lt=65535)
     ip: str
     timeout: int = Field(ge=0)
-    protocol: str
-    verbose: bool
+    protocol: str = "icmp"
     number_of_requests: int
     max_ttl: int = Field(ge=0)
     interval: int = Field(ge=0)
     size_of_packet: int
     routers: list[Router] = []
 
-    def _raw_whois_query(self, ip: int) -> str | None:
-        """Sends a query to whois.radb.net and returns the autonomous system"""
+    def analyze_ip(self) -> None:
+        """Analyzes the IP address"""
         try:
-            s = socket.socket()
-            s.settimeout(self.timeout)
-            s.connect(("whois.radb.net", 43))
-            s.send(f"n + {ip}\n".encode())
-            data = b""
-            while True:
-                chunk = s.recv(1024)
-                if not chunk:
-                    break
-                data += chunk
+            ip = ipaddress.ip_address(self.ip)
+            if not isinstance(ip, IPv4Address):
+                raise ValueError("Invalid IP address")
+        except ValueError:
+            raise ValueError("Invalid IP address")
 
-            s.close()
-            text = data.decode()
-            for line in text.split("\n"):
-                if "origin" in line:
-                    return line.split(":")[1].strip()
-            return None
-        except socket.timeout:
-            return None
-
-    def search_routers(self) -> None:
-        """Search routers for the specified protocol"""
-        if self.protocol == "icmp":
-            self._icmp_traceroute()
-        elif self.protocol == "tcp":
-            self._tcp_traceroute()
-        elif self.protocol == "udp":
-            self._udp_traceroute()
-
-    def _view_routers(self) -> None:
+    def view_routers(self) -> None:
         """Prints the results of the search"""
         for router in self.routers:
-            if self.verbose:
-                print(
-                    f"{router.num} {router.ip if router.ip is not None else '*'}"
-                    + f" [{router.time if router.ip is not None else '*'},ms]"
-                    + f" [{router.autonomous_system if router.autonomous_system is not None else '*'}]"
-                )
-            else:
-                print(
-                    f"{router.num} {router.ip if router.ip is not None else '*'}"
-                    + f" [{router.time if router.ip is not None else '*'},ms]"
-                )
+            print(
+                f"{router.num} {router.ip if router.ip is not None else '*'}"
+                + f"    {router.time if router.ip is not None else '*'},ms"
+            )
 
     def _calculate_data_len_for_icmp(self) -> int:
         """Calculates the length of the data for ICMP packets"""
@@ -77,7 +47,7 @@ class Traceroute(BaseModel):
             raise ValueError("Packet size is too small")
         return data_len
 
-    def _icmp_traceroute(self) -> None:
+    def run(self) -> None:
         """Traceroute for ICMP protocol"""
         data_len = self._calculate_data_len_for_icmp()
         for ttl in range(1, self.max_ttl + 1):
@@ -93,74 +63,9 @@ class Traceroute(BaseModel):
                 timeout = self.interval
             rrt = (time.time() - start_time - timeout) * 1000
             if response is None:
-                self.routers.append(Router(ip=None, num=ttl, time=int(rrt), autonomous_system=None))
+                self.routers.append(Router(ip=None, num=ttl, time=int(rrt)))
             elif response.type == 11:
-                autonomous_system = self._raw_whois_query(response.src)
-                self.routers.append(
-                    Router(ip=response.src, num=ttl, time=int(rrt), autonomous_system=autonomous_system)
-                )
+                self.routers.append(Router(ip=response.src, num=ttl, time=int(rrt)))
             elif response.type == 0:
-                autonomous_system = self._raw_whois_query(response.src)
-                self.routers.append(
-                    Router(ip=response.src, num=ttl, time=int(rrt), autonomous_system=autonomous_system)
-                )
-                break
-
-    def _calculate_data_len_for_tcp(self) -> int:
-        """Calculates the length of the data for TCP packets"""
-        ip_len = 20
-        tcp_headers_len = 20
-        data_len = self.size_of_packet - ip_len - tcp_headers_len
-        if data_len < 0:
-            raise ValueError("Packet size is too small")
-        return data_len
-
-    def _tcp_traceroute(self) -> None:
-        """Traceroute for TCP protocol"""
-        data_len = self._calculate_data_len_for_tcp()
-        for ttl in range(1, self.max_ttl + 1):
-            timeout = 0
-            for _ in range(self.number_of_requests):
-                packet = IP(dst=self.ip, ttl=ttl) / TCP(dport=self.port, flags="S") / Raw(load=data_len * b"X")
-                start_time = time.time()
-                response = sr1(packet, timeout=self.timeout, verbose=0)
-                if response is not None:
-                    timeout = 0
-                    break
-                time.sleep(self.interval)
-                timeout = self.interval
-            rrt = (time.time() - start_time - timeout) * 1000
-            if response is None:
-                self.routers.append(Router(ip=None, num=ttl, time=int(rrt), autonomous_system=None))
-            elif response.haslayer(TCP):
-                autonomous_system = self._raw_whois_query(response.src)
-                self.routers.append(
-                    Router(ip=response.src, num=ttl, time=int(rrt), autonomous_system=autonomous_system)
-                )
-                break
-            elif response.type == 11:
-                autonomous_system = self._raw_whois_query(response.src)
-                self.routers.append(
-                    Router(ip=response.src, num=ttl, time=int(rrt), autonomous_system=autonomous_system)
-                )
-
-    def _udp_traceroute(self) -> None:
-        """Traceroute for UDP protocol"""
-        for ttl in range(1, self.max_ttl + 1):
-            packet = IP(dst=self.ip, ttl=ttl) / UDP(dport=self.port + ttl)
-            start_time = time.time()
-            response = sr1(packet, timeout=self.timeout, verbose=0)
-            rrt = (time.time() - start_time) * 1000
-            if response is None:
-                self.routers.append(Router(ip=None, num=ttl, time=int(rrt), autonomous_system=None))
-            elif response.type == 11:
-                autonomous_system = self._raw_whois_query(response.src)
-                self.routers.append(
-                    Router(ip=response.src, num=ttl, time=int(rrt), autonomous_system=autonomous_system)
-                )
-            elif response.type == 3 and response.code == 3:
-                autonomous_system = self._raw_whois_query(response.src)
-                self.routers.append(
-                    Router(ip=response.src, num=ttl, time=int(rrt), autonomous_system=autonomous_system)
-                )
+                self.routers.append(Router(ip=response.src, num=ttl, time=int(rrt)))
                 break

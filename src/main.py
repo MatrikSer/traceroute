@@ -9,12 +9,11 @@ def main() -> None:
         port=args.p,
         ip=args.ip,
         timeout=args.t,
-        protocol=args.protocol,
-        verbose=args.v,
         number_of_requests=args.n,
         max_ttl=args.mt,
         interval=args.i,
         size_of_packet=args.s,
     )
-    traceroute.search_routers()
-    traceroute._view_routers()
+    traceroute.analyze_ip()
+    traceroute.run()
+    traceroute.view_routers()
