@@ -1,4 +1,3 @@
-import pytest
 from unittest.mock import patch
 
 from src.parser import parse_args
@@ -6,7 +5,7 @@ from src.parser import parse_args
 
 class TestParseArgs:
     @patch('sys.argv', ['traceroute', 'google.com', 'icmp'])
-    def test_parse_args_basic(self):
+    def test_parse_args_basic(self) -> None:
         args = parse_args()
         assert args.address == 'google.com'
         assert args.protocol == 'icmp'
@@ -18,7 +17,7 @@ class TestParseArgs:
         assert args.p == 53
 
     @patch('sys.argv', ['traceroute', '192.168.1.1', 'tcp', '-t', '5', '-n', '2'])
-    def test_parse_args_with_options(self):
+    def test_parse_args_with_options(self) -> None:
         args = parse_args()
         assert args.address == '192.168.1.1'
         assert args.protocol == 'tcp'

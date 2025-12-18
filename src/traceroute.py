@@ -9,6 +9,7 @@ from scapy.all import TCP  # type: ignore[attr-defined]
 from scapy.all import ICMPv6EchoRequest  # type: ignore[attr-defined]
 from scapy.all import IPv6  # type: ignore[attr-defined]
 from scapy.all import (
+    Packet,
     Raw,
     sr1,
 )
@@ -53,7 +54,9 @@ class Traceroute(BaseModel):
         """Prints the results of the search"""
         for router in self.routers:
             print(
-                f"{router.num} {router.ip if router.ip is not None else '*'}    {router.time if router.ip is not None else '*'},ms"
+                f"{router.num} {router.ip if router.ip is not None else '*'}"
+                + "    "
+                + f"{router.time if router.ip is not None else '*'},ms"
             )
 
     def search_routers(self) -> None:
@@ -72,7 +75,7 @@ class Traceroute(BaseModel):
             if found_answer:
                 break
 
-    def analyze_response(self, ttl, response, rrt):
+    def analyze_response(self, ttl: int, response: Packet | None, rrt: float) -> bool:
         """Analyzes the response"""
         if self.protocol == "icmp":
             found_answer = self.analyze_response_icmp(ttl, response, rrt)
@@ -80,7 +83,7 @@ class Traceroute(BaseModel):
             found_answer = self.analyze_response_tcp(ttl, response, rrt)
         return found_answer
 
-    def create_packet(self, data_len, ttl):
+    def create_packet(self, data_len: int, ttl: int) -> Packet:
         """Creates the packet"""
         if self.protocol == "icmp":
             packet = self.create_packet_for_icmp(data_len, ttl)
@@ -88,23 +91,25 @@ class Traceroute(BaseModel):
             packet = self.create_packet_for_tcp(data_len, ttl)
         return packet
 
-    def create_packet_for_tcp(self, data_len, ttl):
+    def create_packet_for_tcp(self, data_len: int, ttl: int) -> Packet:
         """Creates the TCP packet"""
         if self.ipv6:
-            packet = IPv6(dst=self.address, hlim=ttl) / TCP(dport=self.port, flags="S") / Raw(load=data_len * b"X")
+            packet: Packet = (
+                IPv6(dst=self.address, hlim=ttl) / TCP(dport=self.port, flags="S") / Raw(load=data_len * b"X")
+            )
         else:
             packet = IP(dst=self.address, ttl=ttl) / TCP(dport=self.port, flags="S") / Raw(load=data_len * b"X")
         return packet
 
-    def create_packet_for_icmp(self, data_len, ttl):
+    def create_packet_for_icmp(self, data_len: int, ttl: int) -> Packet:
         """Creates the ICMP packet"""
         if self.ipv6:
-            packet = IPv6(dst=self.address, hlim=ttl) / ICMPv6EchoRequest() / Raw(load=data_len * b"X")
+            packet: Packet = IPv6(dst=self.address, hlim=ttl) / ICMPv6EchoRequest() / Raw(load=data_len * b"X")
         else:
             packet = IP(dst=self.address, ttl=ttl) / ICMP() / Raw(load=data_len * b"X")
         return packet
 
-    def create_data_len(self):
+    def create_data_len(self) -> int:
         """Creates the data length for the packet"""
         if self.protocol == "icmp":
             data_len = self._calculate_data_len_for_icmp()
@@ -130,7 +135,7 @@ class Traceroute(BaseModel):
             raise ValueError("Packet size is too small for ICMP")
         return data_len
 
-    def analyze_response_icmp(self, ttl, response, rrt):
+    def analyze_response_icmp(self, ttl: int, response: Packet | None, rrt: float) -> bool:
         """Analyzes the response for ICMP packets"""
         if response is None:
             self.routers.append(Router(ip=None, num=ttl, time=int(rrt)))
@@ -138,11 +143,11 @@ class Traceroute(BaseModel):
         src_ip = response.src
         self.routers.append(Router(ip=src_ip, num=ttl, time=int(rrt)))
         if self.ipv4:
-            return response.type == 0
+            return bool(response.type == 0)
         else:
-            return response.type == 129 or response.type == 1
+            return bool(response.type == 129 or response.type == 1)
 
-    def analyze_response_tcp(self, ttl, response, rrt):
+    def analyze_response_tcp(self, ttl: int, response: Packet | None, rrt: float) -> bool:
         """Analyzes the response for TCP packets"""
         if response is None:
             self.routers.append(Router(ip=None, num=ttl, time=int(rrt)))
@@ -154,7 +159,7 @@ class Traceroute(BaseModel):
             return bool((tcp.flags & 0x12) or (tcp.flags & 0x04) or (tcp.flags & 0x14))
         if hasattr(response, "type"):
             if self.ipv4:
-                return response.type == 3
+                return bool(response.type == 3)
             else:
-                return response.type == 1
+                return bool(response.type == 1)
         return False
