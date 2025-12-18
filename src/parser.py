@@ -13,5 +13,4 @@ def parse_args() -> Namespace:
     parser.add_argument("-i", type=int, default=0, help="Interval between requests")
     parser.add_argument("-s", type=int, default=40, help="Size of packet")
     parser.add_argument("-p", type=int, default=53, help="Port")
-    parser.add_argument("-v", action="store_true", help="Verbose")
     return parser.parse_args()
